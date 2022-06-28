@@ -10,3 +10,10 @@
 > 来自[github](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)
 
 硬件程序在[hardware分支](https://github.com/imshixin/esp32c3_observer/tree/hardware)
+
+计划：
+
+- [ ] 电脑端托盘程序
+- [ ] tft显示优化或使用lvgl
+- [ ] 支持使用数据线连接
+> 正在持续更新中
