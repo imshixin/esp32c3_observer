@@ -1,19 +1,11 @@
-import ctypes, sys, clr
-import time
+import time, socket, serial, clr
 from pathlib import Path
-import socket
-
-def is_admin():
-  try:
-    return ctypes.windll.shell32.IsUserAnAdmin()
-  except:
-    return False
 
 
 class Observer:
 
   def __init__(self) -> None:
-    clr.AddReference(str(Path(__file__).parent.absolute()/'LibreHardwareMonitorLib.dll'))
+    clr.AddReference(str(Path(__file__).parent.absolute() / 'LibreHardwareMonitorLib.dll'))
     from LibreHardwareMonitor.Hardware import Computer
     self.computer = Computer()
     self.computer.IsCpuEnabled = True
@@ -48,42 +40,40 @@ class Observer:
             if _name in str(self.computer.Hardware[hardware].Sensors[sensor].Name)
             and _id in str(self.computer.Hardware[hardware].Sensors[sensor].Identifier)
         ]
+        print(self.computer.Hardware[hardware].Sensors[sensor].Name,
+              self.computer.Hardware[hardware].Sensors[sensor].Identifier,
+              self.computer.Hardware[hardware].Sensors[sensor].Value)
         if len(match_identifier) > 0:
           self.sensor_index[match_identifier[0]].extend([hardware, sensor])
-          # print(self.computer.Hardware[hardware].Sensors[sensor].Name,
-          #       self.computer.Hardware[hardware].Sensors[sensor].Identifier,
-          #       self.computer.Hardware[hardware].Sensors[sensor].Value)
 
   def getData(self):
     #更新硬件信息
     for h in set([_[1] for _ in self.sensor_index]):
       self.computer.Hardware[h].Update()
-    data = ''
+    data = []
     for title, hardware, sensor in self.sensor_index:
-      data+=f'{title} : {str(self.computer.Hardware[hardware].Sensors[sensor].Value)}{"%" if "load" in title else "℃"}\n'
+      data.append(str(int(self.computer.Hardware[hardware].Sensors[sensor].Value)) + " ")
       # print(title, str(self.computer.Hardware[hardware].Sensors[sensor].Value))
-    return data
+    return ''.join(data)
 
-def main():
+def wifi_main():
   ob = Observer()
-  addr='192.168.43.206'
-  port=34567
-  soc = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-  while True:
-    try:
-      print('尝试连接 ',f'{addr}:{port}',end='\r')
-      soc.connect((addr,port))
-      print('连接成功')
-      while True:
-        soc.send((ob.getData()+"\0").encode('utf-8'))
-        time.sleep(1)
-    except ConnectionError as e:
-      print(e.strerror)
-      print('连接关闭')
-    soc.close()
-    time.sleep(5)
+  addr = '192.168.43.206'
+  port = 34567
+  soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  try:
+    print('尝试连接 ', f'{addr}:{port}', end='\r')
+    soc.connect((addr, port))
+    print('连接成功')
+    while True:
+      soc.send((ob.getData() + "\0").encode('utf-8'))
+      time.sleep(1)
+  except ConnectionError as e:
+    print(e.strerror)
+    print('连接关闭')
 
 
+# def serial_main
 
 if __name__ == '__main__':
-  main()
+  wifi_main()
